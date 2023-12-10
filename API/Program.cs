@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+var MyLocalOrigin = "_myLocalOrigin";
 
 // Add services to the container.
 
@@ -12,6 +13,16 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DataContext>(opt =>
 {
     opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy(name: MyLocalOrigin, policy =>
+    {
+        policy
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .WithOrigins("http://localhost:3000");
+    });
 });
 
 var app = builder.Build();
@@ -28,6 +39,8 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseCors(MyLocalOrigin);
 
 using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
