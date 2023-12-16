@@ -3,6 +3,7 @@ import { Activity } from "../../../app/models/activity";
 import ActivityList from "./ActivityList";
 import ActivityDetails from "../details/ActivityDetails";
 import ActivityForm from "../folder/ActivityForm";
+import LoadingComponent from "../../../app/layout/LoadingComponent";
 
 interface Props {
     activities: Activity[];
@@ -14,6 +15,8 @@ interface Props {
     handleFormClose: () => void;
     createOrEdit: (activity: Activity) => void;
     deleteActivity: (id: string) => void;
+    isLoading: boolean;
+    submitting: boolean;
 }
 
 export default function ActivityDashbord({
@@ -25,32 +28,42 @@ export default function ActivityDashbord({
     handleFormOpen,
     handleFormClose,
     createOrEdit,
-    deleteActivity
+    deleteActivity,
+    isLoading,
+    submitting
 }: Props) {
+
+    // Loadding
+    if (isLoading) return <LoadingComponent />;
+
     return (
-        <Grid>
-            <Grid.Column width='10' >
-                <ActivityList
-                    activities={activities}
-                    selectActivity={selectActivity}
-                    deleteActivity={deleteActivity} />
-            </Grid.Column>
-            <Grid.Column width='6'>
-                {selectedActivity && !editMode &&
-                    < ActivityDetails
-                        activity={selectedActivity}
-                        cancelSelectActivity={cancelSelectActivity}
-                        handleFormOpen={handleFormOpen}
-                        handleFormClose={handleFormClose} />
-                }
-                {editMode &&
-                    < ActivityForm
-                        activity={selectedActivity}
+        <>
+            <Grid>
+                <Grid.Column width='10' >
+                    <ActivityList
+                        activities={activities}
                         selectActivity={selectActivity}
-                        cancelSelectActivity={cancelSelectActivity}
-                        handleFormClose={handleFormClose}
-                        createOrEdit={createOrEdit} />}
-            </Grid.Column>
-        </Grid >
+                        deleteActivity={deleteActivity}
+                        submitting={submitting} />
+                </Grid.Column>
+                <Grid.Column width='6'>
+                    {selectedActivity && !editMode &&
+                        < ActivityDetails
+                            activity={selectedActivity}
+                            cancelSelectActivity={cancelSelectActivity}
+                            handleFormOpen={handleFormOpen}
+                            handleFormClose={handleFormClose} />
+                    }
+                    {editMode &&
+                        <ActivityForm
+                            activity={selectedActivity}
+                            selectActivity={selectActivity}
+                            cancelSelectActivity={cancelSelectActivity}
+                            handleFormClose={handleFormClose}
+                            createOrEdit={createOrEdit}
+                            submitting={submitting} />}
+                </Grid.Column>
+            </Grid >
+        </>
     )
 }

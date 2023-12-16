@@ -28,6 +28,8 @@ namespace Application.Activities
 
             public async Task<Activity> Handle(Query request, CancellationToken cancellationToken)
             {
+                // FindAsyncは主キーの検索用
+                // 他の条件で検索したい場合は、whereを追加
                 return await _context.Activities.FindAsync(request.Id);
             }
         }

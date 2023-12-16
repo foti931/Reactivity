@@ -16,8 +16,6 @@ namespace API.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Activity>> GetActivity(Guid id)
         {
-            // FindAsyncは主キーの検索用
-            // 他の条件で検索したい場合は、whereを追加
             return await Mediator.Send(new Details.Query { Id = id });
         }
 
