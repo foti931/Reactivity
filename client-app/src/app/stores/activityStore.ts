@@ -8,7 +8,7 @@ export default class ActivityStore {
   selectedActivity: Activity | undefined = undefined;
   editMode = false;
   loading = false;
-  loadingInitial = true;
+  loadingInitial = false;
 
   constructor() {
     makeAutoObservable(this);
@@ -21,27 +21,30 @@ export default class ActivityStore {
   }
 
   loadActivities = async () => {
+    this.setLoadingInitial(true);
     try {
       const activities = await agent.Activities.list();
       activities.forEach((activity) => {
-        activity.date = activity.date.split("T")[0];
-        this.activityRegistry.set(activity.id, activity);
+        this.setActivity(activity);
       });
       runInAction(() => {
-        this.loadingInitial = false;
+        this.setLoadingInitial(false);
       });
     } catch (error) {
       console.log(error);
       runInAction(() => {
-        this.loadingInitial = false;
+        this.setLoadingInitial(false);
       });
     }
   };
 
-  setActivity = (id: string) => {
-    this.selectedActivity = this.activityRegistry.get(id);
-    this.setEditMode(false);
-  };
+  private setLoadingInitial(bool: boolean) {
+    this.loadingInitial = bool;
+  }
+
+  private setLoading(bool: boolean) {
+    this.loading = bool;
+  }
 
   setEditMode = (state: boolean) => {
     this.editMode = state;
@@ -53,77 +56,97 @@ export default class ActivityStore {
     });
   };
 
-  cancelActivity = () => {
-    this.selectedActivity = undefined;
-  };
-
-  openForm = (id?: string) => {
-    id ? this.setActivity(id) : this.cancelActivity();
-    this.editMode = true;
-  };
-
-  closeForm = () => {
-    this.setEditMode(false);
-  };
-
   editActivity = async (activity: Activity) => {
     runInAction(() => {
-      this.loading = true;
+      this.setLoading(true);
+      this.setEditMode(true);
     });
     try {
       await agent.Activities.edit(activity);
       this.activityRegistry.set(activity.id, activity);
-      this.setActivity(activity.id);
+      this.setActivity(activity);
       runInAction(() => {
         this.setEditMode(false);
-        this.loading = true;
+        this.setLoading(false);
       });
     } catch (error) {
       console.log(error);
       runInAction(() => {
         this.setEditMode(false);
-        this.loading = true;
+        this.setLoading(false);
       });
     }
   };
 
+  loadActivity = async (id: string) => {
+    const activity = this.getActivity(id);
+    if (activity) {
+      this.selectedActivity = activity;
+      this.setLoadingInitial(false);
+      return activity;
+    } else {
+      this.setLoadingInitial(true);
+      try {
+        const activity = await agent.Activities.detail(id);
+        runInAction(() => {
+          this.selectedActivity = activity;
+          this.setActivity(activity);
+          this.setLoadingInitial(false);
+        });
+        return activity;
+      } catch (error) {
+        console.log(error);
+        this.setLoadingInitial(false);
+      }
+    }
+  };
+
+  private setActivity(activity: Activity) {
+    activity.date = activity.date.split("T")[0];
+    this.activityRegistry.set(activity.id, activity);
+  }
+
+  private getActivity(id: string) {
+    return this.activityRegistry.get(id);
+  }
+
   createActivity = async (activity: Activity) => {
     runInAction(() => {
-      this.loading = true;
+      this.setLoading(true);
     });
     try {
       activity.id = uuid();
-      await agent.Activities.create(activity);
+      await agent.Activities.create(activity).then();
       this.activityRegistry.set(activity.id, activity);
-      this.setActivity(activity.id);
+      this.setActivity(activity);
       runInAction(() => {
         this.setEditMode(false);
-        this.loading = false;
+        this.setLoading(false);
       });
     } catch (error) {
       console.log(error);
       runInAction(() => {
         this.setEditMode(false);
-        this.loading = false;
+        this.setLoading(false);
       });
     }
   };
 
   deleteActivity = async (id: string) => {
     runInAction(() => {
-      this.loading = true;
+      this.setLoading(true);
     });
     try {
       await agent.Activities.delete(id);
       this.activityRegistry.delete(id);
-      if (this.selectedActivity?.id === id) this.cancelActivity();
+      if (this.selectedActivity?.id === id) this.activityRegistry.delete(id);
       runInAction(() => {
-        this.loading = false;
+        this.setLoading(false);
       });
     } catch (error) {
       console.log(error);
       runInAction(() => {
-        this.loading = false;
+        this.setLoading(false);
       });
     }
   };
