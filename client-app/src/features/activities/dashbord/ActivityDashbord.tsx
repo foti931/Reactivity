@@ -4,13 +4,11 @@ import { useStore } from "../../../app/stores/store";
 import ActivityList from './ActivityList';
 import { useEffect } from "react";
 import LoadingComponent from "../../../app/layout/LoadingComponent";
-// import { useLocation } from "react-router-dom";
-// import toast, { Toaster } from "react-hot-toast";
+import ActivityFilter from "./ActivityFilter";
 
 export default observer(function ActivityDashboard() {
     const { activityStore } = useStore();
     const { loadActivities, activityRegistry } = activityStore;
-
 
     useEffect(() => {
         if (activityRegistry.size <= 1) loadActivities();
@@ -23,6 +21,7 @@ export default observer(function ActivityDashboard() {
                 <ActivityList />
             </Grid.Column>
             <Grid.Column width='6'>
+                <ActivityFilter />
             </Grid.Column>
         </Grid >
     )
